@@ -14,6 +14,7 @@ Source code for digital race 2018
 ```
 catkin_make
 source devel/setup.bash
+roslaunch cv_test cv_test.launch
 ```
 6. Enjoy
 ## Author
