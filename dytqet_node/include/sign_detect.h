@@ -11,6 +11,6 @@ using namespace cv;
 using namespace std;
 
 /* Detect and show result */
-void detectAndDisplay(Mat frame, CascadeClassifier sign);
+void detectAndDisplay(Mat frame, CascadeClassifier sign, string name);
 
 #endif

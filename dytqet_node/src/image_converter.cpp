@@ -14,8 +14,13 @@ ros::Publisher speed_publisher;
 int counter = 0;
 
 /** Global variable */
-String sign_cascade_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade.xml";
-CascadeClassifier sign;
+String sign_cascade_left_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade_left.xml";
+String sign_cascade_right_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade_right_temp.xml";
+
+string name_left = "left";
+string name_right = "right";
+CascadeClassifier sign_left;
+CascadeClassifier sign_right;
 
 std::string window_name = "Sign detection";
 RNG rng(12345);
@@ -51,19 +56,28 @@ public:
 		}
 		
 		waitKey(10);
+		detectAndDisplay(cv_ptr->image, sign_left, name_left);
+		detectAndDisplay(cv_ptr->image, sign_right, name_right);
 		laneDetect(cv_ptr->image);
-		detectAndDisplay(cv_ptr->image, sign);
+
 	}
 };
 
 int main(int argc, char* argv[])
 {
 	/* Load cascade */
-	if (!sign.load(sign_cascade_name)) 
+	if (!sign_left.load(sign_cascade_left_name)) 
 	{
 		printf("--(!) Error loading \n");
 		return 0;
 	}
+	
+	if (!sign_right.load(sign_cascade_right_name))
+	{
+		printf("--(!) Error loading \n");
+		return 0;
+	}
+
 	ros::init(argc, argv,"CNN");
 	ImageConverter ic;
 	ros::spin();
