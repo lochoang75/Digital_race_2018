@@ -22,6 +22,6 @@ limitations under the License.
 	<node name="file_server" pkg="file_server" type="file_server" output="screen"/>
 
 	<node name="rqt_graph" pkg="rqt_graph" type="rqt_graph" output="screen" />
-    <node name="image_converter" pkg="cv_test" type="image_converter" output="screen" args="_image_transport:=compressed" />
+    <node name="image_converter" pkg="dytqet_node" type="image_converter" output="screen" args="_image_transport:=compressed" />
 
 </launch>

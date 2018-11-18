@@ -8,7 +8,7 @@ int laneDetect(Mat inimg) {
 	 imshow("Source", img);
 	 
 	 ///////////////////////////////////
-	 Point A, B, C, D, E, F, G, H, I;
+	 Point A, B, C, D, E, F, G, H, I, J, K;
 	 A.x = 0;
 	 A.y = 0;
 	 B.x = 0;
@@ -19,14 +19,18 @@ int laneDetect(Mat inimg) {
 	 D.y = img.size().height / 2 - 30;
 	 E.x = img.size().width;
 	 E.y = 0;
-	 F.x = img.size().width / 2 - 80;
-	 F.y = img.size().height - 60;
+	 F.x = img.size().width / 2 - 20;
+	 F.y = img.size().height - 120;
 	 G.x = img.size().width / 2 - 80;
 	 G.y = img.size().height;
 	 H.x = img.size().width / 2 + 80;
 	 H.y = img.size().height;
-	 I.x = img.size().width / 2 + 80;
-	 I.y = img.size().height - 60;
+	 I.x = img.size().width / 2 + 20;
+	 I.y = img.size().height - 120;
+	 J.x = 0;
+	 J.y = img.size().height;
+	 K.x = img.size().width;
+	 K.y = img.size().height;
 
 	 vector<Point> points;
 	 points.push_back(A);
@@ -49,15 +53,51 @@ int laneDetect(Mat inimg) {
 	 points3.push_back(H);
 	 points3.push_back(I);
 
+	 vector<Point> points4;
+	 points4.push_back(B);
+	 points4.push_back(J);
+	 points4.push_back(C);	 
+
+	 vector<Point> points5;
+	 points5.push_back(D);
+	 points5.push_back(K);
+	 points5.push_back(C);
+
 	 Mat gray;
 	 cvtColor(img, gray, CV_BGR2GRAY);
 	 Canny(gray, gray, 100, 450);
 
+	 Mat forSub(gray.size().height, gray.size().width, CV_8UC3, Scalar(0, 0, 0));
+	 
+	 vector<vector<Point>> contours;
+	 Mat contourOutput = gray.clone();
+	 findContours(contourOutput, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+
+	 //Draw the contours
+	 Mat contourImage(gray.size(), CV_8UC3, Scalar(0, 0, 0));
+	 Scalar colors[3];
+	 colors[0] = cv::Scalar(255, 0, 0);
+	 colors[1] = cv::Scalar(0, 255, 0);
+	 colors[2] = cv::Scalar(0, 0, 255);
+	 for (size_t idx = 0; idx < contours.size(); idx++) {
+		 if(idx <= 40) drawContours(forSub, contours, idx, Scalar(255,255,255));
+		 drawContours(contourImage, contours, idx, colors[idx % 3]);
+	 }
+	 fillConvexPoly(forSub, points, Scalar(0, 0, 0), CV_AA, 0);
+	 fillConvexPoly(forSub, points1, Scalar(0, 0, 0), CV_AA, 0);
+	 fillConvexPoly(forSub, points2, Scalar(0, 0, 0), CV_AA, 0);
+	 fillConvexPoly(forSub, points4, Scalar(0, 0, 0), CV_AA, 0);
+	 fillConvexPoly(forSub, points5, Scalar(0, 0, 0), CV_AA, 0);	 	 	 
+
+	 imshow("Contours", contourImage);
+	 imshow("Blank", forSub);
 	 fillConvexPoly(gray, points, Scalar(0, 0, 0), CV_AA, 0);
 	 fillConvexPoly(gray, points1, Scalar(0, 0, 0), CV_AA, 0);
-	 fillConvexPoly(gray, points2, Scalar(0, 0, 0), CV_AA, 0);		 
-	 //fillConvexPoly(gray, points3, Scalar(0, 0, 0), CV_AA, 0);
+	 fillConvexPoly(gray, points2, Scalar(0, 0, 0), CV_AA, 0);			 
 	 
+	 cvtColor(forSub, forSub, CV_BGR2GRAY);
+	 subtract(gray, forSub, gray);
+
 	 vector<Vec4i> lines;
 	 Point maxl1, maxl2, maxr1, maxr2;
 	 maxl1.x = 0;
@@ -103,6 +143,7 @@ int laneDetect(Mat inimg) {
 				line(gray, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(255, 0, 0), 3, CV_AA);
 			}		 
 	 }
+	 
 	 imshow("Gray", gray);
 	 Point temp1, temp2, temp3, temp4;
 	 double length = sqrt(pow(maxl2.x - maxl1.x, 2.0) + pow(maxl2.y - maxl2.y, 2.0));

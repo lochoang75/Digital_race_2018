@@ -14,7 +14,7 @@ ros::Publisher speed_publisher;
 int counter = 0;
 
 /** Global variable */
-String sign_cascade_name = "/home/fallinlove/catkin_ws/src/cv_test/cascade.xml";
+String sign_cascade_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade.xml";
 CascadeClassifier sign;
 
 std::string window_name = "Sign detection";

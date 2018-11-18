@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(cv_test)
+project(dytqet_node)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
  add_compile_options(-std=c++11)
@@ -108,7 +108,7 @@ include_directories (${OpenCV_INCLUDE_DIRS})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES cv_test
+  LIBRARIES detect_api
   CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs
   DEPENDS system_lib
 )
@@ -125,7 +125,7 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(cv_test
+add_library(detect_api
 	./src/lane_detect.cpp
 	./src/sign_detect.cpp
 )
@@ -151,7 +151,7 @@ add_library(cv_test
 add_dependencies(image_converter ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target againt
-target_link_libraries(image_converter cv_test ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(image_converter detect_api ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 #############
 ## Install ##
