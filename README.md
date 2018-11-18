@@ -11,10 +11,10 @@ Source code for digital race 2018
 3. Copy to src folder of catkin_ws.
 4. Fix any static link (ex: cascade.xml...).
 5. Run 
-'''
+```
 catkin_make
 source devel/setup.bash
-'''
+```
 6. Enjoy
 ## Author
 This project belong to Dyqet team_ Digital race 2018
