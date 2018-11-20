@@ -15,7 +15,7 @@ int counter = 0;
 
 /** Global variable */
 String sign_cascade_left_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade_left.xml";
-String sign_cascade_right_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade_right_temp.xml";
+String sign_cascade_right_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade_right_2.xml";
 
 string name_left = "left";
 string name_right = "right";
