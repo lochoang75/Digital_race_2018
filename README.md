@@ -11,14 +11,14 @@ Source code for digital race 2018
 3. Copy to src folder of catkin\_ws.
 4. Fix any static link (ex: cascade.xml...).
 5. Run
-	- Run Dytqet team node
+- Run Dytqet team node
+	
 ```
 catkin_make
 source devel/setup.bash
 roslaunch dytqet_node dytqet_node.launch
 ```
-
-	- Run lane - detect node (with some test function from Thanh)
+- Run lane - detect node (with some test function from Thanh)
 
 ```
 catkin_make
