@@ -17,7 +17,9 @@ catkin_make
 source devel/setup.bash
 roslaunch dytqet_node dytqet_node.launch
 ```
+
 	- Run lane - detect node (with some test function from Thanh)
+
 ```
 catkin_make
 source devel/setup.bash
