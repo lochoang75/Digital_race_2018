@@ -9,7 +9,6 @@ Source code for digital race 2018
 1. Install ROS.
 2. Clone or pull newest version.
 3. Copy to src folder of catkin\_ws.
-4. Fix any static link (ex: cascade.xml...).
 5. Run
 - Run Dytqet team node
 	

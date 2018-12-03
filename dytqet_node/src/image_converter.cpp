@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <iostream>
 #include <stdio.h>
 #include <image_transport/image_transport.h>
@@ -14,8 +15,8 @@ ros::Publisher speed_publisher;
 int counter = 0;
 
 /** Global variable */
-String sign_cascade_left_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade_left.xml";
-String sign_cascade_right_name = "/home/fallinlove/catkin_ws/src/dytqet_node/cascade_right_2.xml";
+String sign_cascade_left_name = ros::package::getPath("dytqet_node").append("/cascade_left.xml");
+String sign_cascade_right_name = ros::package::getPath("dytqet_node").append("/cascade_right_2.xml");
 
 string name_left = "left";
 string name_right = "right";
