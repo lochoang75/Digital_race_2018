@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(dytqet_node)
+project(team211)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
  add_compile_options(-std=c++11)
@@ -126,8 +126,9 @@ include_directories(
 
 ## Declare a C++ library
 add_library(detect_api
-	./src/lane_detect.cpp
-	./src/sign_detect.cpp
+	src/lane_detect.cpp
+	src/sign_detect.cpp
+  src/carcontrol.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -138,7 +139,7 @@ add_library(detect_api
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(image_converter ./src/image_converter.cpp)
+ add_executable(team211 src/main.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -148,10 +149,10 @@ add_library(detect_api
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(image_converter ${catkin_EXPORTED_TARGETS})
+add_dependencies(team211 ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target againt
-target_link_libraries(image_converter detect_api ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(team211 detect_api ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 #############
 ## Install ##
