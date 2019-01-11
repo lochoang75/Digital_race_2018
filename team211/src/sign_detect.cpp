@@ -3,21 +3,46 @@
 /* Detect sign */
 int detectSign(Mat frame, CascadeClassifier sign, String name)
 {
-	return	detectOject(frame, sign, name, 1.1);
+	// create point vector
+	vector<Point> point;
+
+	// Get point 
+	point =	detectOject(frame, sign, name, 1.1); 
+
+	// Get width if vector has data
+	int width = 0;
+	if (!point.empty())
+	{
+		width = point[1].x - point[0].x;
+	}
+
+	return width;
 }
 
 /* Detect rock */
-int detectRock(Mat frame, CascadeClassifier rock, String name)
+vector<Point> detectRock(Mat frame, CascadeClassifier rock, String name)
 {
 	return detectOject(frame, rock, name, 1.2);
 	
 }
+
+/* Detect stack box */
+vector<Point> detectStackBox(Mat frame, CascadeClassifier stack_box, String name)
+{
+	return detectOject(frame, stack_box, name, 1.1);
+}
+
 /* Detect object*/
-int detectOject(Mat frame, CascadeClassifier object, String name, double scale)
+vector<Point> detectOject(Mat frame, CascadeClassifier object, String name, double scale)
 {
 
-	/* Create gray frame */
+	/* Create objects vector */
 	vector<Rect> objects;
+
+	/* Create object bottom position vector */
+	vector<Point> points;
+
+	/* Create gray frame */
 	Mat frame_gray;
 
 	/* Convert color */
@@ -43,6 +68,12 @@ int detectOject(Mat frame, CascadeClassifier object, String name, double scale)
 
 	if (objects.size() > 0)
 	{
+		// Add left point 
+		points.push_back(Point(x, y + h));
+
+		// Add right point
+		points.push_back(Point(x + w, y + h));
+
 		// Sign border 
 		cv::Rect object_border(x, y, w, h);
 
@@ -53,5 +84,5 @@ int detectOject(Mat frame, CascadeClassifier object, String name, double scale)
 		cv::putText(frame, name, cv::Point(x, w +h), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cv::Scalar(255, 0, 0));
 	}
 
-	return objects.size() ? w : 0;
+	return points;
 }

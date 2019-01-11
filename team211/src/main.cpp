@@ -20,11 +20,12 @@ int skipFrame = 1;
 String sign_cascade_left_name = ros::package::getPath("team211").append("/cascade_left.xml");
 String sign_cascade_right_name = ros::package::getPath("team211").append("/cascade_right_2.xml");
 String rock_name = ros::package::getPath("team211").append("/cascade_rock.xml");
+String stack_box_name = ros::package::getPath("team211").append("/cascade_stack_box.xml");
 
 CascadeClassifier sign_left;
 CascadeClassifier sign_right;
 CascadeClassifier rock;
-
+CascadeClassifier stack_box;
 int idx = 1;
 
 int sign_flag = 0;
@@ -97,6 +98,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
             }
             else{
                 car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
+                sign_flag = 0;
             }
         }
         else 
@@ -124,24 +126,40 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
             }
             else{
                  car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
+                 sign_flag = 0;
             }
         }
-        
-        detectRock(cv_ptr->image, rock);
 
-        cout<< "Sign :"<<sign_flag<< endl;
-        cout<< "Count: "<< idx << endl;
+        // Create point  and detect rock 
+        vector<Point> points = detectRock(cv_ptr->image, rock);
+        if ( !points.empty())
+        {
+            // do stuff with rock detected
+            cout<< "Rock(" << points[0].x << ","<< points[0].y <<")("<< points[1].x<<","<<points[1].y<<")"<< endl;
+
+            // after that empty the vector for next function
+            points.clear();
+        };
+
+        // Detect stack box
+        points = detectStackBox(cv_ptr->image, stack_box);
+        if ( !points.empty())
+        {
+            // do stuff with stackbox detected
+            cout<< "Stack Box(" << points[0].x << ","<< points[0].y <<")("<< points[1].x<<","<<points[1].y<<")"<< endl;
+
+            // after that empty the vector for next function
+            points.clear();
+        };
+  
         cv::imshow("View", cv_ptr->image);
 
         //Write image for training
-        /*
-        string name = to_string(idx);
-        string savepath = "/home/fallinlove/catkin_ws/image/101c" + name + ".jpg";
-        imwrite(savepath, cv_ptr->image);
-        idx++;
-        waitKey(1);
-        */
-
+        //string name = to_string(idx);
+        // string savepath = "/home/fallinlove/catkin_ws/image/101c" + name + ".jpg";
+        // imwrite(savepath, cv_ptr->image);
+        // idx++;
+         waitKey(1);
     }
     catch (cv_bridge::Exception& e)
     {
@@ -168,19 +186,25 @@ int main(int argc, char **argv)
 /* Load cascade */
 	if (!sign_left.load(sign_cascade_left_name)) 
 	{
-		printf("--(!) Error loading \n");
+		printf("--(!) Error loading sign left detect\n");
 		return 0;
 	}
 	
 	if (!sign_right.load(sign_cascade_right_name))
 	{
-		printf("--(!) Error loading \n");
+		printf("--(!) Error loading sign right detect\n");
 		return 0;
 	}
 		  
 	if (!rock.load(rock_name))
 	{
-		printf("--(!) Error loading \n");
+		printf("--(!) Error loading rock detect \n");
+		return 0;
+	}
+
+	if (!stack_box.load(stack_box_name))
+	{
+		printf("--(!) Error loading stackbox detect \n");
 		return 0;
 	}
 ros::init(argc, argv, "image_listener");

@@ -108,7 +108,7 @@ include_directories (${OpenCV_INCLUDE_DIRS})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES detect_api
+  LIBRARIES detect211_api
   CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs
   DEPENDS system_lib
 )
@@ -125,7 +125,7 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(detect_api
+add_library(detect211_api
 	src/lane_detect.cpp
 	src/sign_detect.cpp
   src/carcontrol.cpp
@@ -152,7 +152,7 @@ add_library(detect_api
 add_dependencies(team211 ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target againt
-target_link_libraries(team211 detect_api ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(team211 detect211_api ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 #############
 ## Install ##

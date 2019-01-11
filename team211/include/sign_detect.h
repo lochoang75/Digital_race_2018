@@ -15,11 +15,15 @@ using namespace std;
 // Else return size of sign
 int detectSign(Mat frame, CascadeClassifier sign, String name);
 
-int detectRock(Mat frame, CascadeClassifier rock, String = "rock");
+/* Detect obstacle rock*/
+vector<Point> detectRock(Mat frame, CascadeClassifier rock, String = "rock");
+
+/* Detect obstacle stackbox*/
+vector<Point> detectStackBox(Mat frame, CascadeClassifier stack_box, String = "stack box");
 
 // Detect object
 // return 0 if not
 // Else return postition of object
-int detectOject(Mat frame, CascadeClassifier object, String name, double = 1.2);
+vector<Point> detectOject(Mat frame, CascadeClassifier object, String name, double = 1.2);
 
 #endif
