@@ -32,6 +32,13 @@ vector<Point> detectStackBox(Mat frame, CascadeClassifier stack_box, String name
 	return detectOject(frame, stack_box, name, 1.1);
 }
 
+
+/* Detect single box */
+vector<Point> detectSingleBox(Mat frame, CascadeClassifier stack_box, String name)
+{
+	return detectOject(frame, stack_box, name, 1.1);
+}
+
 /* Detect object*/
 vector<Point> detectOject(Mat frame, CascadeClassifier object, String name, double scale)
 {
@@ -55,7 +62,7 @@ vector<Point> detectOject(Mat frame, CascadeClassifier object, String name, doub
 	int x, y, w, h;
 	
 	/* Detect sign */
-	object.detectMultiScale(frame_gray, objects, scale , 2,  0|CV_HAAR_SCALE_IMAGE,Size(5, 5) );
+	object.detectMultiScale(frame_gray, objects, scale , 3,  0|CV_HAAR_SCALE_IMAGE,Size(10, 10) );
 
 	/* Get last object border */
 	for (size_t i = 0; i < objects.size(); i++)

@@ -17,15 +17,19 @@ DetectLane *detect;
 CarControl *car;
 int skipFrame = 1;
 
-String sign_cascade_left_name = ros::package::getPath("team211").append("/cascade_left.xml");
+/* XML location */
+String sign_cascade_left_name = ros::package::getPath("team211").append("/cascade_left_3.xml");
 String sign_cascade_right_name = ros::package::getPath("team211").append("/cascade_right_2.xml");
 String rock_name = ros::package::getPath("team211").append("/cascade_rock.xml");
 String stack_box_name = ros::package::getPath("team211").append("/cascade_stack_box.xml");
+String single_box_name = ros::package::getPath("team211").append("/cascade_single_box.xml");
 
+/* CascadeClassifier object create */
 CascadeClassifier sign_left;
 CascadeClassifier sign_right;
 CascadeClassifier rock;
 CascadeClassifier stack_box;
+CascadeClassifier single_box;
 
 int idx = 1;
 
@@ -201,17 +205,27 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
             points.clear();
         };
 
+        // Detect single box
+        points = detectSingleBox(cv_ptr->image, single_box);
+        if ( !points.empty())
+        {
+            // do stuff with stackbox detected
+            cout<< "Signle Box(" << points[0].x << ","<< points[0].y <<")("<< points[1].x<<","<<points[1].y<<")"<< endl;
+
+            // after that empty the vector for next function
+            points.clear();
+        };
+
 
         cv::imshow("View", cv_ptr->image);
-        waitKey(1);
+        //waitKey(1);
         //Write image for training
-        /*
-        string name = to_string(idx);
-        string savepath = "/home/fallinlove/catkin_ws/image/101c" + name + ".jpg";
-        imwrite(savepath, cv_ptr->image);
-        idx++;
+        // string name = to_string(idx);
+        // string savepath = "/home/fallinlove/catkin_ws/image/111e" + name + ".jpg";
+        // imwrite(savepath, cv_ptr->image);
+        // idx++;
         waitKey(1);
-        */
+        
 
     }
     catch (cv_bridge::Exception& e)
@@ -260,6 +274,13 @@ int main(int argc, char **argv)
 		printf("--(!) Error loading stackbox detect \n");
 		return 0;
 	}
+
+	if (!single_box.load(single_box_name))
+	{
+		printf("--(!) Error loading stackbox detect \n");
+		return 0;
+	}
+
 ros::init(argc, argv, "image_listener");
     cv::namedWindow("View");
     cv::namedWindow("Binary");

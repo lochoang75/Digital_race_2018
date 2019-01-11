@@ -116,7 +116,7 @@ void DetectLane::update(const Mat &src)
         }
         //cout << endl;
     }
-    imshow("Debug", birdView);
+    //imshow("Debug", birdView);
     fillRoadSide(layers1);
     //if ()
     //{ 
@@ -202,16 +202,16 @@ Mat DetectLane::preProcess(const Mat &src)
 
      //Calling shadow func
     add(laneInShadow(imgHSV), imgThresholded, merge);
-    imshow("Merge", merge);
+    //imshow("Merge", merge);
 
     dst = birdViewTranform(merge);
 
     
 
-    imshow("Bird View", dst);
+    //imshow("Bird View", dst);
 
     fillLane(dst);
-    imshow("fill lane", dst);
+    //imshow("fill lane", dst);
     //morphological(dst);
     //imshow("morpholoical", dst);
     imshow("Binary", imgThresholded);
