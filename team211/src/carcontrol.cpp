@@ -1,11 +1,11 @@
 #include "carcontrol.h"
 
-float temp = 0;
+// float temp = 0;
 
-void get_speed(const std_msgs::Float32::ConstPtr& msg)
-{
-    temp = msg->data;
-}
+// void get_speed(const std_msgs::Float32::ConstPtr& msg)
+// {
+//     temp = msg->data;
+// }
 
 CarControl::CarControl()
 {
@@ -14,16 +14,16 @@ CarControl::CarControl()
     steer_publisher = node_obj1.advertise<std_msgs::Float32>("team211_steerAngle",10);
     speed_publisher = node_obj2.advertise<std_msgs::Float32>("team211_speed",10);
     
-    speed_subscriber = node_obj3.subscribe("get_speed", 10, &get_speed);
+    //speed_subscriber = node_obj3.subscribe("get_speed", 10, &get_speed);
 }
 
 CarControl::~CarControl() {}
 
-float CarControl::get_Velocity()
-{
-    velocity = temp;
-    return velocity;
-}
+// float CarControl::get_Velocity()
+// {
+//     velocity = temp;
+//     return velocity;
+// }
 
 float CarControl::errorAngle(const Point &dst)
 {
@@ -38,7 +38,7 @@ float CarControl::errorAngle(const Point &dst)
 
 void CarControl::driverCar(const vector<Point> &left, const vector<Point> &right, float velocity)
 {
-    int i = left.size() - 11;
+    int i = left.size() - 12;
     float error = preError;
     while (left[i] == DetectLane::null && right[i] == DetectLane::null) {
         i--;
@@ -115,7 +115,7 @@ void CarControl::drive_right()
 {
 	std_msgs::Float32 angle;
 	std_msgs::Float32 speed;
-	angle.data = 45;
+	angle.data = 50;
 	speed.data = 45;
 	steer_publisher.publish(angle);
 	speed_publisher.publish(speed);    
@@ -125,7 +125,7 @@ void CarControl::drive_left()
 {
 	std_msgs::Float32 angle;
 	std_msgs::Float32 speed;
-	angle.data = -45;
+	angle.data = -50;
 	speed.data = 45;
 	steer_publisher.publish(angle);
 	speed_publisher.publish(speed);    

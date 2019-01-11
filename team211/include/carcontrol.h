@@ -27,20 +27,24 @@ public:
     void drive_left();
     void drive_Left(const vector<Point> &left, float velocity);
 
-    void set_Velocity(const std_msgs::Float32::ConstPtr& msg) {velocity = msg->data ;}
+    bool isTurnRight = 0;
+    bool isTurnLeft = 0;
 
-    float get_Velocity();
+    bool isObtruction = 0;
+    //void set_Velocity(const std_msgs::Float32::ConstPtr& msg) {velocity = msg->data ;}
+
+    //float get_Velocity();
 
 private:
     float errorAngle(const Point &dst);
     
     ros::NodeHandle node_obj1;
     ros::NodeHandle node_obj2;
-    ros::NodeHandle node_obj3;
+    //ros::NodeHandle node_obj3;
     
     ros::Publisher steer_publisher;
     ros::Publisher speed_publisher;
-    ros::Subscriber speed_subscriber;
+    //ros::Subscriber speed_subscriber;
     Point carPos;
 
 
@@ -52,13 +56,7 @@ private:
     float maxVelocity = 40;
     float preError;
 
-    float kP;
-    float kI;
-    float kD;
-
-    int t_kP;
-    int t_kI;
-    int t_kD;
+  
 };
 
 

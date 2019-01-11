@@ -1,8 +1,26 @@
 #include "lane_detect.h"
+#include "polynomialregression.h"
 
 int min(int a, int b)
 {
     return a < b ? a : b;
+}
+
+double x_regression_HORIZONTAL(const vector<double> &coeffs, const vector<Point> &points, int N)
+{
+    double res = 0;
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < NUMBER_COEFFS; j++)
+            res+= coeffs[j] * pow(points[i].y, j);
+    return res/N;
+}
+
+double x_regression(const vector<double> &coeffs, const double &y)
+{
+    double res = 0;
+    for (int i = 0; i < NUMBER_COEFFS; i++)
+        res+= coeffs[i] * pow(y, i);
+    return res;
 }
 
 int DetectLane::slideThickness = 10;
@@ -32,7 +50,11 @@ DetectLane::DetectLane() {
 
     cvCreateTrackbar("Shadow Param", "Threshold", &shadowParam, 255);
     */
-    
+    desireLine  = vector<Point>(31);
+    //leftLine    = vector<Point>(31);
+    //rightLine   = vector<Point>(31);
+    last_leftLine_coeffs.clear();
+    last_rightLine_coeffs.clear();
 }
 
 DetectLane::~DetectLane(){}
@@ -49,6 +71,21 @@ vector<Point> DetectLane::getRightLane()
     return rightLane;
 }
 
+vector<Point> DetectLane::getDesireLine()
+{
+    return desireLine;
+}
+
+vector<Point> DetectLane::getLeftLine()
+{
+    return leftLine;
+}
+
+vector<Point> DetectLane::getRightLine()
+{
+    return rightLine;
+}
+
 void DetectLane::update(const Mat &src)
 {
     Mat img = preProcess(src);
@@ -63,7 +100,8 @@ void DetectLane::update(const Mat &src)
 
     //Create 2 black images
     birdView = Mat::zeros(img.size(), CV_8UC3);
-    
+    birdView1 = Mat::zeros(img.size(), CV_8UC3);
+
     lane = Mat::zeros(img.size(), CV_8UC3);
 
     for (int i = 0; i < points1.size(); i++)
@@ -78,25 +116,59 @@ void DetectLane::update(const Mat &src)
         }
         //cout << endl;
     }
-   
-    // if (fillRoadSide(layers1, points2))
+    imshow("Debug", birdView);
+    fillRoadSide(layers1);
+    //if ()
+    //{ 
+        for (int i = 0; i < NUMBER_ELEMENTS; i++)
+        {
+            circle(birdView1, leftLine[i], 1, Scalar(0,255,0), 2, 8, 0 );
+            //if (leftLine[i]!=null) cout << i << ": " << leftLine[i].x << " " << leftLine[i].y << "; ";
+        }
+        for (int i = 0; i < NUMBER_ELEMENTS; i++)
+        {
+            circle(birdView1, rightLine[i], 1, Scalar(0,255,0), 2, 8, 0 );
+            //if (rightLine[i]!=null) cout << i << ": " << rightLine[i].x << " " << rightLine[i].y << "; ";
+        }
+        
+            imshow("Fill road", birdView1);
+        
+    //}
+    //cout << analyseLine(0, 10) << endl;
+    //update_desireLine(points1);
+    
+    // for (int i=0; i< NUMBER_ELEMENTS; i++)
     // {
-    //     for (int i = 0; i < points2.size(); i++)
-    //     {
-    //         for (int j = 0; j < points2[i].size(); j++)
-    //         {
-                
-    //             circle(birdView1, points2[i][j], 1, Scalar(0,255,0), 2, 8, 0 );
-               
-    //         }
-    //     }
-    //     if (!birdView1.empty())
-    //     imshow("Fill road", birdView1);
+    //     if (desireLine[i]!=null) cout << i << ": " << desireLine[i].x << " " << desireLine[i].y << "; ";
     // }
+    //cout << endl;
     
+    // for (int i=0; i< NUMBER_ELEMENTS; i++)
+    // {
+    //     if (leftLine[i]!=null) cout << i << ": " << leftLine[i].x << " " << leftLine[i].y << "; ";
+    // }
+    // for (int i = 0; i< leftLine_x.size(); i++)
+    //     cout << leftLine_x[i] << " ";
+    // cout << endl;
+    // for (int i = 0; i< leftLine_y.size(); i++)
+    //     cout << leftLine_y[i] << " ";
+    // cout << endl;
+    //cout << "xy: " <<leftLine_x.size() << " " << leftLine_y.size() << endl;
     
+    // update_last5Line(desireLine);
+    // if (last5desireLine.size()==5) cout << "Update 5 lines" << endl;
     
- 
+    //regression
+    //x = a0 + a1*y +a2*y^2 +
+    // if (leftLine_x.size() && leftLine_y.size())
+    // {
+    //     PolynomialRegression<double> regress;
+    //     regress.fitIt(leftLine_y, leftLine_x, NUMBER_COEFFS+1, coeffs);
+    //     cout << "coeffs ";
+    //     for (int i=0; i < NUMBER_COEFFS; i++)
+    //         cout << coeffs[i] << " ";
+    //     cout << endl;
+    // }
     detectLeftRight(points1);
 
     for (int i = 1; i < leftLane.size(); i++)
@@ -130,6 +202,7 @@ Mat DetectLane::preProcess(const Mat &src)
 
      //Calling shadow func
     add(laneInShadow(imgHSV), imgThresholded, merge);
+    imshow("Merge", merge);
 
     dst = birdViewTranform(merge);
 
@@ -254,8 +327,17 @@ vector<vector<Point> > DetectLane::centerRoadSide(const vector<Mat> &src, int di
     return res;
 }
 
-bool DetectLane::fillRoadSide(const vector<Mat> &src, vector<vector<Point> > &res)
+bool DetectLane::fillRoadSide(const vector<Mat> &src)
 {
+    leftLine.clear();
+    rightLine.clear();
+
+    for (int i = 0; i < NUMBER_ELEMENTS; i ++)
+    {
+        leftLine.push_back(null);
+        rightLine.push_back(null);
+    }
+   
     int flag = 0; //check black img
     vector<std::vector<Point> > points;
     int inputN = src.size();
@@ -287,105 +369,376 @@ bool DetectLane::fillRoadSide(const vector<Mat> &src, vector<vector<Point> > &re
         
         points.push_back(tmp);   
     }
-    cout << "Init:" << endl;
-    for (int i = 0; i<31; i++)
-        {
-            for (int j = 0; j < points[i].size(); j++)
-            {
-                cout << i << ": " << points[i][j].x << " " << points[i][j].y << "; ";
-            }
-            cout << endl;
-        }
+    
+    // cout << "Init:" << endl;
+    // for (int i = 0; i<31; i++)
+    //     {
+    //         for (int j = 0; j < points[i].size(); j++)
+    //         {
+    //             cout << i << ": " << points[i][j].x << " " << points[i][j].y << "; ";
+    //         }
+    //         cout << endl;
+    //     }
     ///////////////////////////////////////////////////////////////////////////////////////////
     
     //cout << flag << endl;
-    if (flag < 31)
-    {
-        int d[2][31];
-        for (int i = 30; i >=0; i--) {
-            Point temp_left = {134, 4 + 10*i};
-            Point temp_right = {99, 4 + 10*i};
-            //res.insert(res.begin(), points[i]);
-            
-            std::vector<Point> temp;
-            if (points[i].size() == 0)
+    //if (flag < 31)
+    //{
+        //Update first coeffs
+        //vector<double> leftLine_coeffs, rightLine_coeffs;
+        if (!last_leftLine_coeffs.size() || !last_rightLine_coeffs.size())
+        {
+            update_desireLine(points);
+            vector<double> leftLine_x, leftLine_y, rightLine_x, rightLine_y;
+            for (int i=0; i< NUMBER_ELEMENTS; i++)
             {
-                res.insert(res.begin(), temp);
-                continue; 
-            }
-            else if (points[i].size() == 1)
-            {
-                float coff0 = 0, coff1 = 0;
-
-                for (int j= 30; j>i; j--)
+                if (leftLine[i]!=null)
                 {
-                    coff0 += d[0][j];
-                    coff1 += d[1][j];
+                    leftLine_x.push_back(leftLine[i].x);
+                    leftLine_y.push_back(leftLine[i].y);
                 }
-                coff0 = sqrtf(coff0)/(30-i+1);
-                coff1 = sqrtf(coff1)/(30-i+1);
-                cout << coff0 << " " << coff1 << endl;
 
-                if (coff0 < 5 && coff1 < 5)
+                if (rightLine[i]!=null)
                 {
-                    if (abs(points[i][0].x - 134) < abs(points[i][0].x - 99))
+                    rightLine_x.push_back(rightLine[i].x);
+                    rightLine_y.push_back(rightLine[i].y);
+                }
+            }
+            //regression
+            //x = a + b*y +c*y^2
+            PolynomialRegression<double> regress;
+            if (leftLine_x.size() && leftLine_y.size())
+            {
+                regress.fitIt(leftLine_y, leftLine_x, NUMBER_COEFFS-1, last_leftLine_coeffs); 
+            }
+            if (rightLine_x.size() && rightLine_y.size())
+            {
+                regress.fitIt(rightLine_y, rightLine_x, NUMBER_COEFFS-1, last_rightLine_coeffs);
+            }
+            for (int i = 0; i < last_leftLine_coeffs.size(); i++)
+                cout << last_leftLine_coeffs[i] << " ";
+            cout << endl;
+            for (int i = 0; i < last_rightLine_coeffs.size(); i++)
+                cout << last_rightLine_coeffs[i] << " ";
+            cout << endl;
+            return false;
+        }
+        
+        
+        for (int i = 0; i < NUMBER_ELEMENTS; i++)
+        {
+            int N = points[i].size();
+            if (N > 8 || N == 0)
+            {
+                leftLine[i] = null;
+                rightLine[i] = null;
+                //cout << i <<" failed\n";
+            }
+            else
+            {
+                //int leftXregress = x_regression_HORIZONTAL(last_leftLine_coeffs, points[i], N);
+                //int rightXregress = x_regression_HORIZONTAL(last_rightLine_coeffs, points[i], N);
+                
+                double y_temp = 0;
+                for (int j = 0; j < N; j++)
+                    y_temp+= points[i][j].y;
+                
+                y_temp = y_temp / N;
+                //cout << y_temp << endl;
+                int leftXregress = x_regression(last_leftLine_coeffs, y_temp);
+                int rightXregress = x_regression(last_rightLine_coeffs, y_temp);
+                //cout << leftXregress << " " << rightXregress << endl;
+                int minLeft=1000, minRight=1000;
+                int posLeft, posRight;
+                
+                for (int j = 0; j < N; j++)
+                {
+                    int toLeftX = abs(points[i][j].x - leftXregress);
+                    int toRightX = abs(points[i][j].x - rightXregress);
+                    if (toLeftX < toRightX)
                     {
-                        res[i][0] = points[i][0];
-                        res[i][1].y = points[i][0].y;
-                        res[i][1].x = 99 - (134 - points[i][0].x);
+                        if (toLeftX < minLeft)
+                        {
+                            minLeft = toLeftX;
+                            posLeft = j;
+                        }
                     }
                     else
                     {
-                        res[i][1] = points[i][0];
-                        res[i][0].y = points[i][1].y;
-                        res[i][0].x = 134 - (99 - points[i][1].x);
-                    }   
+                        if (toRightX < minRight)
+                        {
+                            minRight = toRightX;
+                            posRight = j;
+                        }
+                    }
                 }
-                d[0][i] = abs(points[i][0].x*points[i][0].x - 134*134);
-                d[1][i] = abs(points[i][1].x*points[i][1].x - 99*99);
-                
-            }
-            else if (points[i].size() == 2)
-            {
-                /*
-                cout << points[i][0].x << " " << points[i][0].y << endl;
-                if  (abs(points[i][0].x - temp_left.x) > abs(points[i][0].x - temp_right.x))
-                {
-                    temp[0].y = points[i][0].y;
-                    temp[0].x = temp_left.x - (temp_right.x - points[i][0].x);
-                    temp.push_back(points[i][0]);
-                }
+                //cout << minLeft << " " << minRight << endl;
+                if (minLeft < 10)
+                    leftLine[i] = points[i][posLeft];
                 else 
-                {
-                    temp.insert(temp.begin(), points[i][0]);
-                    temp[1].y = points[i][0].y;
-                    temp[1].x = temp_right.x - (temp_left.x - points[i][0].x);
-                    
-                }
-                res.insert(res.begin(), temp);
-                */
-                d[0][i] = abs(points[i][0].x*points[i][0].x - 134*134);
-                d[1][i] = abs(points[i][1].x*points[i][1].x - 99*99);
-                res.insert(res.begin(), points[i]);
+                    leftLine[i] = null;
+
+                if (minRight < 10)
+                    rightLine[i] = points[i][posRight];
+                else 
+                    rightLine[i] = null;
             }
-            
+        }
+        
+
+        vector<double> leftLine_x, leftLine_y, rightLine_x, rightLine_y;
+        for (int i=0; i< NUMBER_ELEMENTS; i++)
+        {
+            if (leftLine[i]!=null)
+            {
+                leftLine_x.push_back(leftLine[i].x);
+                leftLine_y.push_back(leftLine[i].y);
+            }
+
+            if (rightLine[i]!=null)
+            {
+                rightLine_x.push_back(rightLine[i].x);
+                rightLine_y.push_back(rightLine[i].y);
+            }
+        }
+        //regression
+        //x = a + b*y +c*y^2
+        PolynomialRegression<double> regress;
+        last_leftLine_coeffs.clear();
+        last_rightLine_coeffs.clear();
+        if (leftLine_x.size() && leftLine_y.size())
+        {
+            regress.fitIt(leftLine_y, leftLine_x, NUMBER_COEFFS-1, last_leftLine_coeffs); 
+        }
+        if (rightLine_x.size() && rightLine_y.size())
+        {
+            regress.fitIt(rightLine_y, rightLine_x, NUMBER_COEFFS-1, last_rightLine_coeffs);
+        }
+        
+        //regression for null line[i]
+        // for (int i = 0; i < NUMBER_ELEMENTS; i++)
+        // {
+        //     if (leftLine[i]==null) 
+        //     {
+        //         leftLine[i].x = x_regression(last_leftLine_coeffs, 10*i + 4);
+        //         leftLine[i].y = 10*i +4;
+        //     }
+        //     if (rightLine[i]==null) 
+        //     {
+        //         rightLine[i].x = x_regression(last_rightLine_coeffs, 10*i + 4);
+        //         rightLine[i].y = 10*i +4;
+        //     }
+               
+        
+        // }
+        int analyse = analyseLine(0, 10);
+
+        if ( analyse == 5 || analyse == 7) last_leftLine_coeffs.clear();
+        if (analyse == 6 || analyse == 7) last_rightLine_coeffs.clear();
+    //}
+    return true;
+    ///////////////////////////////////////////////////////////////////////////////////////////
+}
+
+//Function to analyse left and right line from the position pos to NUMBER_ELEMENTS
+//Return 0 if full line 
+//
+//Return 2 if vacant left line
+//Return 3 if vacant right line
+//Return 4 if vacant left&right line
+//Return 5 if null left line
+//Return 6 if null right line
+//Return 7 if null left&right line
+int DetectLane::analyseLine(int pos, int range)
+{
+    int previousLeft, previousRight; //store previous null
+    int countLeft = 0, countRight = 0;
+    vector<int> tempLeft, tempRight; // store size of null chain
+    if (leftLine[pos] == null)
+    {
+        previousLeft = pos;
+        countLeft++;
+        tempLeft.push_back(1);
+        tempLeft.push_back(1);
+    }
+    else
+    {
+        previousLeft = -1;
+        tempLeft.push_back(0);
+    }
+    if (rightLine[pos] == null)
+    {
+        previousRight = pos;
+        countRight++;
+        tempRight.push_back(1);
+        tempRight.push_back(1);
+    }
+    else
+    {
+        previousRight = -1;
+        tempRight.push_back(0);
+    }
+
+    for (int i = pos + 1; i < NUMBER_ELEMENTS; i++)
+    {
+        if (leftLine[i] == null)
+        {
+            if (leftLine[i-1] == null)
+            { 
+               tempLeft[tempLeft[0]]++;
+            }
+            else 
+            {
+                tempLeft[0]++;
+                tempLeft.push_back(1);
+            }
+            countLeft++;
+            previousLeft = i;
+        }   
+        
+
+        if (rightLine[i] == null)
+        {
+            if (rightLine[i-1] == null)
+                tempRight[tempRight[0]]++;
             else
             {
-                res.insert(res.begin(), points[i]);
+                tempRight[0]++;
+                tempRight.push_back(1);
             }
+            countRight++;
+            previousRight = i;
         }
-        for (int i = 0; i<31; i++)
-        {
-            for (int j = 0; j < res[i].size(); j++)
-            {
-                cout << i << ": " << res[i][j].x << " " << res[i][j].y << "; ";
-            }
-            cout << endl;
-        }
-        return true;
     }
-    return false;
-    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    if (NUMBER_ELEMENTS - pos - countLeft < 5 && NUMBER_ELEMENTS - pos - countRight < 5)
+        return 7;
+    if (NUMBER_ELEMENTS - pos - countLeft < 5)
+        return 5;
+    if (NUMBER_ELEMENTS - pos - countRight < 5)
+        return 6;
+    
+    bool isVacantLeft = false;
+    bool isVacantRight = false;
+    for (int i = 0; i < tempLeft[0]; i++)
+    {
+        if (tempLeft[i+1] > range)
+            isVacantLeft = true; 
+    }
+    for (int i = 0; i < tempRight[0]; i++)
+    {
+        if (tempRight[i+1] > range)
+            isVacantRight = true; 
+    
+    }
+
+    if (isVacantLeft && isVacantRight)
+        return 4;
+    if (isVacantLeft)
+        return 2;
+    if (isVacantRight)
+        return 3;
+    
+    return 0;
+}
+
+//Function to determine when turn right
+//Return -1 if continue to go straight
+//Return 0 if turn right
+//Return 1 if end the turn right
+int DetectLane::turnRight()
+{
+    if (turn == false)
+    {
+        int ana = analyseLine(0, 12); 
+        if (ana == 3 || ana == 6 || ana == 7)
+        {
+            turn = true;
+            cout << "ana: " << ana << endl;
+        }
+    }
+
+    else
+    {
+        for (int i = NUMBER_ELEMENTS - 1; i >= 0; i--)
+        {
+             
+            if (rightLine[i] != null && last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y < 0.15)
+            {
+                cout << last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y << endl;
+                turn = false;
+                return 1;
+            }
+        }
+        
+    }
+    
+    if (turn) return 0;
+    return -1;
+}
+
+
+//Function to determine when turn left
+//Return -1 if continue to go straight
+//Return 0 if turn left
+//Return 1 if end the turn left
+int DetectLane::turnLeft()
+{
+    if (turn == false)
+    {
+        int ana = analyseLine(0, 12); 
+        if (ana == 2 || ana == 5 || ana == 7)
+        {
+            turn = true;
+            cout << "ana: " << ana << endl;
+        }
+    }
+
+    else
+    {
+        for (int i = NUMBER_ELEMENTS - 1; i >= 0; i--)
+        {
+             
+            if (leftLine[i] != null && last_leftLine_coeffs[1] + last_leftLine_coeffs[2]* 2 * leftLine[i].y < 0.15)
+            {
+                turn = false;
+                return 1;
+            }
+        }
+        
+    }
+    
+    if (turn) return 0;
+    return -1;
+}
+
+void DetectLane::update_desireLine(const vector<vector<Point> > &points)
+{
+    desireLine.clear();
+    
+    for (int i = 0; i < NUMBER_ELEMENTS; i++)
+    {
+        if (points[i].size() == 2)
+        {
+            //Update desire line for carcontroll
+            desireLine[i].x = (points[i][0].x + points[i][0].x) / 2;
+            desireLine[i].y = (points[i][1].y + points[i][1].y) / 2;
+
+            //Update left&right line for regression
+            leftLine[i] = points[i][1];
+            rightLine[i] = points[i][0];
+        }
+    }
+   
+}
+
+void DetectLane::update_last5Line(const vector<Point> &points)
+{
+    last5desireLine.insert(last5desireLine.begin(), points);
+    if (last5desireLine.size() == 6)
+        last5desireLine.erase(last5desireLine.begin()+5);
 }
 
 void DetectLane::detectLeftRight(const vector<vector<Point> > &points)

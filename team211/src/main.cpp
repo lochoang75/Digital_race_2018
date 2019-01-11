@@ -26,6 +26,7 @@ CascadeClassifier sign_left;
 CascadeClassifier sign_right;
 CascadeClassifier rock;
 CascadeClassifier stack_box;
+
 int idx = 1;
 
 int sign_flag = 0;
@@ -49,87 +50,135 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         //update and check with 5 nearest records
         //detect->update(cv_ptr->image, times);
 
-        
-        if (sign_flag == 0)
+        if (car->isTurnRight == false && car->isTurnLeft == false)
         {
-            if (detectSign(cv_ptr->image, sign_right, "turn_right"))
+            if (!car->isObtruction)
             {
-                sign_flag = 1;
-                
-            }
-            else if (detectSign(cv_ptr->image, sign_left, "turn_left"))
-            {
-                sign_flag = -1;
-                
-            }
-            else 
-            {
-                //car->get_Velocity() < 45 ?
-                //car->driverCar(detect->getLeftLane(), detect->getRightLane(), 120) :
-                car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
-
-                //cout << car->get_Velocity() << endl;
-            }
-
-        }    
-        
-        else if (sign_flag == 1) 
-        {
-            
-            cout << turn_times_right << " " 
-                << detectSign(cv_ptr->image, sign_right, "turn_right") << endl;
-            
-            if (detectSign(cv_ptr->image, sign_right, "turn_right") > 40)
-                turn_flag = true;
-            
-            if (turn_flag)
-            {
-                if (turn_times_right != 0)
+                if (!detectSign(cv_ptr->image, sign_right, "right") && !detectSign(cv_ptr->image, sign_left, "left"))
+                    car->driverCar(detect->getLeftLine(), detect->getRightLine(), speed);
+                else if (detectSign(cv_ptr->image, sign_right, "right"))
                 {
-                    car->drive_right();
-                    turn_times_right--;
+                    car->isTurnRight = true; 
                 }
-                else
-                { 
-                    turn_times_right = 10;
-                    sign_flag = 0;
-                    turn_flag = false;
+                else 
+                {
+                    car->isTurnLeft = true;
                 }
             }
-            else{
-                car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
-                sign_flag = 0;
+
+            if (car->isObtruction)
+            {
+                
             }
         }
-        else 
+        
+        if (car->isTurnRight)
         {
-           cout << turn_times_left << " " 
-                << detectSign(cv_ptr->image, sign_left, "turn_left") << endl;
-
-            //if (detectSign(cv_ptr->image, sign_left) > 25)
-            if (detectSign(cv_ptr->image, sign_left, "turn_left") > 40)
-                turn_flag = true;
-
-            if (turn_flag)
+            //Using a function to controll drive_right() to pass the turn
+            cout <<  "Right sign size: " << detectSign(cv_ptr->image, sign_right, "right") << endl;
+            
+            if (detect->turnRight() == 0 || detectSign(cv_ptr->image, sign_right, "right") > 35)
+                car->drive_right();
+            if (detect->turnRight() == 1)
             {
-                if (turn_times_left != 0)
-                {
-                    car->drive_left(); 
-                    turn_times_left--;
-                }
-                else
-                { 
-                    turn_times_left = 10;
-                    sign_flag = 0;
-                    turn_flag = false;
-                }
+                car->driverCar(detect->getLeftLine(), detect->getRightLine(), speed);
+                car->isTurnRight = false;
             }
-            else{
-                 car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
-                 sign_flag = 0;
+        }
+        
+        if (car->isTurnLeft)
+        {
+            //Using a function to controll drive_right() to pass the turn
+            cout <<  "Left sign size: " << detectSign(cv_ptr->image, sign_left, "left") << endl;
+            
+            if (detect->turnLeft() == 0 || detectSign(cv_ptr->image, sign_left, "left") > 35)
+                car->drive_left();
+            if (detect->turnLeft() == 1)
+            {
+                car->driverCar(detect->getLeftLine(), detect->getRightLine(), speed);
+                car->isTurnLeft = false;
             }
         }
 
+
+        // if (sign_flag == 0)
+        // {
+        //     if (detectSign(cv_ptr->image, sign_right, "turn_right"))
+        //     {
+        //         sign_flag = 1;
+                
+        //     }
+        //     else if (detectSign(cv_ptr->image, sign_left, "turn_left"))
+        //     {
+        //         sign_flag = -1;
+                
+        //     }
+        //     else 
+        //     {
+        //         //car->get_Velocity() < 45 ?
+        //         //car->driverCar(detect->getLeftLane(), detect->getRightLane(), 120) :
+        //         car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
+
+        //         //cout << car->get_Velocity() << endl;
+        //     }
+
+        // }    
+        
+        // else if (sign_flag == 1) 
+        // {
+            
+        //     cout << turn_times_right << " " 
+        //         << detectSign(cv_ptr->image, sign_right, "turn_right") << endl;
+            
+        //     if (detectSign(cv_ptr->image, sign_right, "turn_right") > 40)
+        //         turn_flag = true;
+            
+        //     if (turn_flag)
+        //     {
+        //         if (turn_times_right != 0)
+        //         {
+        //             car->drive_right();
+        //             turn_times_right--;
+        //         }
+        //         else
+        //         { 
+        //             turn_times_right = 10;
+        //             sign_flag = 0;
+        //             turn_flag = false;
+        //         }
+        //     }
+        //     else{
+        //         car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
+        //     }
+        // }
+        // else 
+        // {
+        //    cout << turn_times_left << " " 
+        //         << detectSign(cv_ptr->image, sign_left, "turn_left") << endl;
+
+        //     //if (detectSign(cv_ptr->image, sign_left) > 25)
+        //     if (detectSign(cv_ptr->image, sign_left, "turn_left") > 40)
+        //         turn_flag = true;
+
+        //     if (turn_flag)
+        //     {
+        //         if (turn_times_left != 0)
+        //         {
+        //             car->drive_left(); 
+        //             turn_times_left--;
+        //         }
+        //         else
+        //         { 
+        //             turn_times_left = 10;
+        //             sign_flag = 0;
+        //             turn_flag = false;
+        //         }
+        //     }
+        //     else{
+        //          car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
+        //     }
+        // }
+        
         // Create point  and detect rock 
         vector<Point> points = detectRock(cv_ptr->image, rock);
         if ( !points.empty())
@@ -151,15 +200,19 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
             // after that empty the vector for next function
             points.clear();
         };
-  
-        cv::imshow("View", cv_ptr->image);
 
+
+        cv::imshow("View", cv_ptr->image);
+        waitKey(1);
         //Write image for training
-        //string name = to_string(idx);
-        // string savepath = "/home/fallinlove/catkin_ws/image/101c" + name + ".jpg";
-        // imwrite(savepath, cv_ptr->image);
-        // idx++;
-         waitKey(1);
+        /*
+        string name = to_string(idx);
+        string savepath = "/home/fallinlove/catkin_ws/image/101c" + name + ".jpg";
+        imwrite(savepath, cv_ptr->image);
+        idx++;
+        waitKey(1);
+        */
+
     }
     catch (cv_bridge::Exception& e)
     {
@@ -210,15 +263,15 @@ int main(int argc, char **argv)
 ros::init(argc, argv, "image_listener");
     cv::namedWindow("View");
     cv::namedWindow("Binary");
-    // cv::namedWindow("Threshold");
+    //cv::namedWindow("Threshold");
     cv::namedWindow("Bird View");
     cv::namedWindow("Lane Detect");
     //cv::namedWindow("Lane Detect1");
     //cv::namedWindow("Shadow");
-    //cv::namedWindow("Merge");
+    cv::namedWindow("Merge");
     //cv::namedWindow("Final");
-    //cv::namedWindow("Debug");
-    //cv::namedWindow("Fill road");
+    cv::namedWindow("Debug");
+    cv::namedWindow("Fill road");
 
     detect = new DetectLane();
     car = new CarControl();
