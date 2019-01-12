@@ -43,6 +43,8 @@ int time_obstruction = 9;
 int turn_times_right = 10;
 int turn_times_left = 10;
 
+Point paint1 = Point(240, 320);
+Point paint2 = Point();
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     
@@ -303,41 +305,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         //          car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
         //     }
         // }
-        
-        // Create point  and detect rock 
-        vector<Point> points = detectRock(cv_ptr->image, rock);
-        if ( !points.empty())
-        {
-            // do stuff with rock detected
-            cout<< "Rock(" << points[0].x << ","<< points[0].y <<")("<< points[1].x<<","<<points[1].y<<")"<< endl;
-
-            // after that empty the vector for next function
-            points.clear();
-        };
-
-        // Detect stack box
-        points = detectStackBox(cv_ptr->image, stack_box);
-        if ( !points.empty())
-        {
-            // do stuff with stackbox detected
-            cout<< "Stack Box(" << points[0].x << ","<< points[0].y <<")("<< points[1].x<<","<<points[1].y<<")"<< endl;
-
-            // after that empty the vector for next function
-            points.clear();
-        };
-
-        // Detect single box
-        points = detectSingleBox(cv_ptr->image, single_box);
-        if ( !points.empty())
-        {
-            // do stuff with stackbox detected
-            cout<< "Single Box(" << points[0].x << ","<< points[0].y <<")("<< points[1].x<<","<<points[1].y<<")"<< endl;
-
-            // after that empty the vector for next function
-            points.clear();
-        };
-
-        cv::imshow("View", cv_ptr->image);
+        Mat image = cv_ptr->image.clone();
+        //line(image, paint1, paint2, Scalar(255, 0, 0), 3, CV_AA);
+        cv::imshow("View", image);
         waitKey(1);
         //Write image for training
         /*

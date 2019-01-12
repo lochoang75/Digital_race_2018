@@ -30,6 +30,7 @@ int DetectLane::VERTICAL = 0;
 int DetectLane::HORIZONTAL = 1;
 Point DetectLane::null = Point();
 
+
 //vector<vector<Point> > DetectLane::straightLine[0][0].x = 134;
 //straightLine[0][0].y = 4;
 
@@ -171,18 +172,25 @@ Mat DetectLane::preProcess(const Mat &src)
 {
     Mat imgThresholded, imgHSV, dst, merge;
 
+    Mat imgshadow = src.clone();
+
     cvtColor(src, imgHSV, COLOR_BGR2HSV);
 
     inRange(imgHSV, Scalar(minThreshold[0], minThreshold[1], minThreshold[2]), 
         Scalar(maxThreshold[0], maxThreshold[1], maxThreshold[2]), 
         imgThresholded);
 
-     //Calling shadow func
-    add(laneInShadow(imgHSV), imgThresholded, merge);
-    //imshow("Merge", merge);
-
-    dst = birdViewTranform(merge);
-
+     
+    if (isShadow(imgshadow))
+    {
+        //Calling shadow func
+        add(laneInShadow(imgHSV), imgThresholded, merge);
+        //imshow("Merge", merge);
+        dst = birdViewTranform(merge);
+    }
+    
+    else 
+        dst = birdViewTranform(imgThresholded);
     
 
     //imshow("Bird View", dst);
@@ -1023,3 +1031,77 @@ int DetectLane::turnRightLane2()
 
     return 0;
 }
+
+bool DetectLane::isShadow(Mat img) {
+    Mat src = img;
+    //imshow("Source", src);
+
+    cvtColor(src, src, COLOR_BGR2HSV);
+
+    int binaryThreshold = 180;
+    Mat shadowMask, shadow, imgHSV, shadowHSV, laneShadow;
+    cvtColor(src, imgHSV, COLOR_BGR2HSV);
+    //imshow("Source1", imgHSV);
+
+    inRange(imgHSV, Scalar(minShadowTh[0], minShadowTh[1], minShadowTh[2]),
+        Scalar(maxShadowTh[0], maxShadowTh[1], maxShadowTh[2]),
+        shadowMask);
+
+    src.copyTo(shadow, shadowMask);
+
+    cvtColor(shadow, shadowHSV, COLOR_BGR2HSV);
+
+    inRange(shadowHSV, Scalar(minLaneInShadow[0], minLaneInShadow[1], minLaneInShadow[2]),
+        Scalar(maxLaneInShadow[0], maxLaneInShadow[1], maxLaneInShadow[2]),
+        laneShadow);
+
+    Mat image = laneShadow;
+    //imshow("Input Image", image);
+    vector<vector<Point> > contours;
+    Mat contourOutput = image.clone();
+    findContours(contourOutput, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+
+    Mat contourImage(image.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+
+    for (size_t idx = 0; idx < contours.size(); idx++) {
+        drawContours(contourImage, contours, idx, Scalar(255, 255, 255));
+    }
+
+    Mat gray;
+    vector<Vec4i> lines;
+    cvtColor(contourImage, gray, CV_BGR2GRAY);
+    HoughLinesP(gray, lines, 1, CV_PI / 180, 30, 25, 10);
+    double slope;
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        Vec4i l = lines[i];
+        slope = (((double)l[3] - (double)l[1]) / ((double)l[2] - (double)l[0]));
+        if (slope <= 0) {
+            if(slope <= -0.85)
+            line(image, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 0), 3, CV_AA);
+        }
+        else {		
+            if (slope >= 0.85)
+            line(image, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 0), 3, CV_AA);
+        }
+    }
+    contourOutput = image.clone();
+    Mat finalImage(image.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+    findContours(contourOutput, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+    double area = 0;
+    for (size_t idx = 0; idx < contours.size(); idx++) {
+        area += contourArea(contours[idx]);
+        drawContours(finalImage, contours, idx, Scalar(255, 255, 255));
+    }
+    
+    //imshow("Shadow", laneShadow);
+
+    //imshow("Hough", image);
+    //imshow("Final", finalImage);
+    //cout << area << endl;
+    //waitKey(0);
+    if (area > 50)
+        return true;
+    else return false;
+	  
+ }

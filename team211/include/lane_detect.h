@@ -62,6 +62,8 @@ public:
 private:
     Mat preProcess(const Mat &src);
 
+    bool isShadow(Mat src);
+
     Mat morphological(const Mat &imgHSV);
     Mat birdViewTranform(const Mat &source);
     void fillLane(Mat &src);
