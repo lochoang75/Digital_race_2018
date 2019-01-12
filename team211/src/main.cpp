@@ -38,6 +38,7 @@ bool turn_flag = false;
 int speed = 50;
 
 bool isObstruction = false, leftObstruction = false, rightObstruction = false;
+int time_obstruction = 9;
 
 int turn_times_right = 10;
 int turn_times_left = 10;
@@ -86,16 +87,72 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
                 {
                     isObstruction = true;
                     if (s1[0].x + s1[1].x > 320)
+                    {
                         rightObstruction = true;
+                        time_obstruction = 0;
+                    }
+                        
                     else
+                    {
+                        leftObstruction = true;
+                        time_obstruction = 0;
+                    }
+                }
+                if (!s2.empty())
+                {
+                    isObstruction = true;
+                    if (s2[0].x + s2[1].x > 320)
+                    {
                         rightObstruction = true;
+                        time_obstruction = 0;
+                    }
+                        
+                    else
+                    {
+                        leftObstruction = true;
+                        time_obstruction = 0;
+                    }
 
+                }
+                if (!s3.empty())
+                {
+                    isObstruction = true;
+                    if (s3[0].x + s3[1].x > 320)
+                    {
+                        rightObstruction = true;
+                        time_obstruction = 0;
+                    }
+                        
+                    else
+                    {
+                        leftObstruction = true;
+                        time_obstruction = 0;
+                    }
                 }
             }
 
-            if (car->isObtruction)
+            else
             {
-                
+                cout << "Obstruction\n";
+                if (time_obstruction < 10)
+                {
+                    if (rightObstruction)
+                    {
+                        car->driverCar(detect->getLeftLane(), detect->getMidLane(), speed-10, 20);
+                    }
+                    if (leftObstruction)
+                    {
+                        car->driverCar(detect->getMidLane(), detect->getRightLane(), speed-10, 20);
+                    }
+                    //i++
+                }
+                else 
+                {
+                    isObstruction = false;
+                    rightObstruction = false;
+                    leftObstruction = false;
+                }
+                time_obstruction++;
             }
         }
         else if (car->isTurnRight)
@@ -105,7 +162,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
             if (!car->turnRightFlag)
             {
                 //cout <<  "Right sign size: " << detectSign(cv_ptr->image, sign_right, "right") << endl;
-                if  (detect->turnRight())//(detectSign(cv_ptr->image, sign_right, "right") > 50) 
+                if  (detect->turnRightLane())//(detectSign(cv_ptr->image, sign_right, "right") > 50) 
                 {
                     car->turnRightFlag = true;
                     car->drive_right();
@@ -114,14 +171,14 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
                 else
                 {
                     cout << "a\n";
-                    car->driverCar(detect->getMidLine(), detect->getRightLine(), speed-10, 20);
+                    car->driverCar(detect->getMidLane(), detect->getRightLane(), speed-10, 20);
                 }
             }
             else 
             {
-               if (detect->turnRight2() == 1)
+               if (detect->turnRightLane2() == 1)
                 {
-                    car->driverCar(detect->getLeftLine(), detect->getRightLine(), speed, 40);
+                    car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed, 40);
                     car->isTurnRight = false;
                     car->turnRightFlag = false;
                 }
@@ -346,16 +403,16 @@ int main(int argc, char **argv)
 	}
 ros::init(argc, argv, "image_listener");
     cv::namedWindow("View");
-    cv::namedWindow("Binary");
-    //cv::namedWindow("Threshold");
-    cv::namedWindow("Bird View");
+    // cv::namedWindow("Binary");
+    // //cv::namedWindow("Threshold");
+    // cv::namedWindow("Bird View");
     cv::namedWindow("Lane Detect");
-    //cv::namedWindow("Lane Detect1");
-    //cv::namedWindow("Shadow");
-    cv::namedWindow("Merge");
-    //cv::namedWindow("Final");
-    cv::namedWindow("Debug");
-    cv::namedWindow("Fill road");
+    // //cv::namedWindow("Lane Detect1");
+    // //cv::namedWindow("Shadow");
+    // cv::namedWindow("Merge");
+    // //cv::namedWindow("Final");
+    // cv::namedWindow("Debug");
+    // cv::namedWindow("Fill road");
 
     detect = new DetectLane();
     car = new CarControl();

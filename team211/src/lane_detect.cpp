@@ -126,7 +126,7 @@ void DetectLane::update(const Mat &src)
         }
         //cout << endl;
     }
-    imshow("Debug", birdView);
+    //imshow("Debug", birdView);
     fillRoadSide(layers1);
     //if ()
     //{ 
@@ -141,7 +141,7 @@ void DetectLane::update(const Mat &src)
             //if (rightLine[i]!=null) cout << i << ": " << rightLine[i].x << " " << rightLine[i].y << "; ";
         }
         
-            imshow("Fill road", birdView1);
+            //imshow("Fill road", birdView1);
         
     
     detectLeftRight(points1);
@@ -160,7 +160,7 @@ void DetectLane::update(const Mat &src)
             circle(lane, rightLane[i], 1, Scalar(255,0,0), 2, 8, 0 );
         }
     }
-    //imshow("Lane Detect1", birdView); 
+    ////imshow("Lane Detect1", birdView); 
     imshow("Lane Detect", lane);
 
     
@@ -179,19 +179,19 @@ Mat DetectLane::preProcess(const Mat &src)
 
      //Calling shadow func
     add(laneInShadow(imgHSV), imgThresholded, merge);
-    imshow("Merge", merge);
+    //imshow("Merge", merge);
 
     dst = birdViewTranform(merge);
 
     
 
-    imshow("Bird View", dst);
+    //imshow("Bird View", dst);
 
     fillLane(dst);
-    imshow("fill lane", dst);
+    //imshow("fill lane", dst);
     //morphological(dst);
-    //imshow("morpholoical", dst);
-    imshow("Binary", imgThresholded);
+    ////imshow("morpholoical", dst);
+    //imshow("Binary", imgThresholded);
     
 
     return dst;
@@ -200,10 +200,10 @@ Mat DetectLane::preProcess(const Mat &src)
 Mat DetectLane::laneInShadow(const Mat &src)
 {
     Mat shadowMask, shadow, imgHSV, shadowHSV, laneShadow;
-    //imshow("srccc", src);
+    ////imshow("srccc", src);
     cvtColor(src, imgHSV, COLOR_BGR2HSV);
    
-    //imshow("shadow1", imgHSV);
+    ////imshow("shadow1", imgHSV);
     inRange(imgHSV, Scalar(minShadowTh[0], minShadowTh[1], minShadowTh[2]),
     Scalar(maxShadowTh[0], maxShadowTh[1], maxShadowTh[2]),  
     shadowMask);
@@ -217,7 +217,7 @@ Mat DetectLane::laneInShadow(const Mat &src)
         Scalar(maxLaneInShadow[0], maxLaneInShadow[1], maxLaneInShadow[2]), 
         laneShadow);
         
-    //imshow("Shadow", laneShadow);
+    ////imshow("Shadow", laneShadow);
 
     return laneShadow;
 }
@@ -982,6 +982,39 @@ int DetectLane::turnLeftLane2()
     for (int i = 0; i < NUMBER_ELEMENTS-13; i++)
     {      
         if (leftLane[i] != null && fabs(left_coeffs[1] + left_coeffs[2]* 2 * leftLane[i].y) < 0.2)
+        {
+            return 1;
+        }
+        
+    }
+
+    return 0;
+}
+
+
+
+int DetectLane::turnRightLane()
+{
+    double max = 0;
+    for (int i = 0; i <NUMBER_ELEMENTS; i++)
+    {  
+        if (rightLane[i] != null)
+        {
+            double temp = fabs(right_coeffs[1] + right_coeffs[2]* 2 * rightLane[i].y);
+            if (temp > max)
+                max = temp;            
+        }  
+    }
+    cout << max << endl;
+    if (max > 0.4) return 1;
+    else  return 0;
+}
+
+int DetectLane::turnRightLane2()
+{
+    for (int i = 0; i < NUMBER_ELEMENTS-13; i++)
+    {      
+        if (rightLane[i] != null && fabs(right_coeffs[1] + right_coeffs[2]* 2 * rightLane[i].y) < 0.2)
         {
             return 1;
         }
