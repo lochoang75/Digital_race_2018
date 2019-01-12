@@ -71,6 +71,11 @@ vector<Point> DetectLane::getRightLane()
     return rightLane;
 }
 
+vector<Point> DetectLane::getMidLane()
+{
+    return midLane;
+}
+
 vector<Point> DetectLane::getDesireLine()
 {
     return desireLine;
@@ -84,6 +89,11 @@ vector<Point> DetectLane::getLeftLine()
 vector<Point> DetectLane::getRightLine()
 {
     return rightLine;
+}
+
+vector<Point> DetectLane::getMidLine()
+{
+    return midLine;
 }
 
 void DetectLane::update(const Mat &src)
@@ -116,7 +126,7 @@ void DetectLane::update(const Mat &src)
         }
         //cout << endl;
     }
-    //imshow("Debug", birdView);
+    imshow("Debug", birdView);
     fillRoadSide(layers1);
     //if ()
     //{ 
@@ -133,42 +143,7 @@ void DetectLane::update(const Mat &src)
         
             imshow("Fill road", birdView1);
         
-    //}
-    //cout << analyseLine(0, 10) << endl;
-    //update_desireLine(points1);
     
-    // for (int i=0; i< NUMBER_ELEMENTS; i++)
-    // {
-    //     if (desireLine[i]!=null) cout << i << ": " << desireLine[i].x << " " << desireLine[i].y << "; ";
-    // }
-    //cout << endl;
-    
-    // for (int i=0; i< NUMBER_ELEMENTS; i++)
-    // {
-    //     if (leftLine[i]!=null) cout << i << ": " << leftLine[i].x << " " << leftLine[i].y << "; ";
-    // }
-    // for (int i = 0; i< leftLine_x.size(); i++)
-    //     cout << leftLine_x[i] << " ";
-    // cout << endl;
-    // for (int i = 0; i< leftLine_y.size(); i++)
-    //     cout << leftLine_y[i] << " ";
-    // cout << endl;
-    //cout << "xy: " <<leftLine_x.size() << " " << leftLine_y.size() << endl;
-    
-    // update_last5Line(desireLine);
-    // if (last5desireLine.size()==5) cout << "Update 5 lines" << endl;
-    
-    //regression
-    //x = a0 + a1*y +a2*y^2 +
-    // if (leftLine_x.size() && leftLine_y.size())
-    // {
-    //     PolynomialRegression<double> regress;
-    //     regress.fitIt(leftLine_y, leftLine_x, NUMBER_COEFFS+1, coeffs);
-    //     cout << "coeffs ";
-    //     for (int i=0; i < NUMBER_COEFFS; i++)
-    //         cout << coeffs[i] << " ";
-    //     cout << endl;
-    // }
     detectLeftRight(points1);
 
     for (int i = 1; i < leftLane.size(); i++)
@@ -187,6 +162,8 @@ void DetectLane::update(const Mat &src)
     }
     //imshow("Lane Detect1", birdView); 
     imshow("Lane Detect", lane);
+
+    
     
 }
 
@@ -202,16 +179,16 @@ Mat DetectLane::preProcess(const Mat &src)
 
      //Calling shadow func
     add(laneInShadow(imgHSV), imgThresholded, merge);
-    //imshow("Merge", merge);
+    imshow("Merge", merge);
 
     dst = birdViewTranform(merge);
 
     
 
-    //imshow("Bird View", dst);
+    imshow("Bird View", dst);
 
     fillLane(dst);
-    //imshow("fill lane", dst);
+    imshow("fill lane", dst);
     //morphological(dst);
     //imshow("morpholoical", dst);
     imshow("Binary", imgThresholded);
@@ -331,11 +308,13 @@ bool DetectLane::fillRoadSide(const vector<Mat> &src)
 {
     leftLine.clear();
     rightLine.clear();
+    midLine.clear();
 
     for (int i = 0; i < NUMBER_ELEMENTS; i ++)
     {
         leftLine.push_back(null);
         rightLine.push_back(null);
+        midLine.push_back(null);
     }
    
     int flag = 0; //check black img
@@ -430,9 +409,9 @@ bool DetectLane::fillRoadSide(const vector<Mat> &src)
             int N = points[i].size();
             if (N > 8 || N == 0)
             {
-                leftLine[i] = null;
-                rightLine[i] = null;
-                //cout << i <<" failed\n";
+                //leftLine[i] = null;
+                //rightLine[i] = null;
+                
             }
             else
             {
@@ -486,7 +465,7 @@ bool DetectLane::fillRoadSide(const vector<Mat> &src)
         }
         
 
-        vector<double> leftLine_x, leftLine_y, rightLine_x, rightLine_y;
+        vector<double> leftLine_x, leftLine_y, rightLine_x, rightLine_y, midLine_x, midLine_y;
         for (int i=0; i< NUMBER_ELEMENTS; i++)
         {
             if (leftLine[i]!=null)
@@ -500,12 +479,19 @@ bool DetectLane::fillRoadSide(const vector<Mat> &src)
                 rightLine_x.push_back(rightLine[i].x);
                 rightLine_y.push_back(rightLine[i].y);
             }
+
+            if (leftLine[i]!= null && rightLine[i] != null)
+            {
+                midLine_x.push_back((rightLine[i].x + leftLine[i].x)/2);
+                midLine_y.push_back((rightLine[i].y + leftLine[i].y)/2);
+            }
         }
         //regression
         //x = a + b*y +c*y^2
         PolynomialRegression<double> regress;
         last_leftLine_coeffs.clear();
         last_rightLine_coeffs.clear();
+        last_midLine_coeffs.clear();
         if (leftLine_x.size() && leftLine_y.size())
         {
             regress.fitIt(leftLine_y, leftLine_x, NUMBER_COEFFS-1, last_leftLine_coeffs); 
@@ -514,7 +500,10 @@ bool DetectLane::fillRoadSide(const vector<Mat> &src)
         {
             regress.fitIt(rightLine_y, rightLine_x, NUMBER_COEFFS-1, last_rightLine_coeffs);
         }
-        
+        if (midLine_x.size() && midLine_y.size())
+        {
+            regress.fitIt(midLine_y, midLine_x, NUMBER_COEFFS-1, last_midLine_coeffs);
+        }
         //regression for null line[i]
         // for (int i = 0; i < NUMBER_ELEMENTS; i++)
         // {
@@ -650,68 +639,71 @@ int DetectLane::analyseLine(int pos, int range)
 //Return 1 if end the turn right
 int DetectLane::turnRight()
 {
-    if (turn == false)
-    {
-        int ana = analyseLine(0, 12); 
-        if (ana == 3 || ana == 6 || ana == 7)
+    double max = 0;
+    for (int i = 0; i <NUMBER_ELEMENTS; i++)
+    {  
+        if (rightLine[i] != null)
         {
-            turn = true;
-            cout << "ana: " << ana << endl;
-        }
+            double temp = fabs(last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y);
+            if (temp > max)
+                max = temp;            
+        }  
     }
-
-    else
-    {
-        for (int i = NUMBER_ELEMENTS - 1; i >= 0; i--)
-        {
-             
-            if (rightLine[i] != null && last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y < 0.15)
-            {
-                cout << last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y << endl;
-                turn = false;
-                return 1;
-            }
-        }
-        
-    }
-    
-    if (turn) return 0;
-    return -1;
+    cout << max << endl;
+    if (max > 0.4) return 1;
+    else  return 0;
 }
 
 
+int DetectLane::turnRight2()
+{
+    for (int i = 0; i < NUMBER_ELEMENTS-18; i++)
+    {
+            
+        if (rightLine[i] != null && fabs(last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y) < 0.2)
+        {
+            cout << last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y << endl;
+            cout << i << endl;
+            return 1;
+        }
+
+        
+    }
+    return 0;
+}
 //Function to determine when turn left
 //Return -1 if continue to go straight
 //Return 0 if turn left
 //Return 1 if end the turn left
 int DetectLane::turnLeft()
 {
-    if (turn == false)
-    {
-        int ana = analyseLine(0, 12); 
-        if (ana == 2 || ana == 5 || ana == 7)
+    double max = 0;
+    for (int i = 0; i <NUMBER_ELEMENTS; i++)
+    {  
+        if (leftLine[i] != null)
         {
-            turn = true;
-            cout << "ana: " << ana << endl;
-        }
+            double temp = fabs(last_leftLine_coeffs[1] + last_leftLine_coeffs[2]* 2 * leftLine[i].y);
+            if (temp > max)
+                max = temp;            
+        }  
     }
+    cout << max << endl;
+    if (max > 0.4) return 1;
+    else  return 0;
+}
 
-    else
-    {
-        for (int i = NUMBER_ELEMENTS - 1; i >= 0; i--)
+int DetectLane::turnLeft2()
+{
+    for (int i = 0; i < NUMBER_ELEMENTS-13; i++)
+    {      
+        if (leftLine[i] != null && fabs(last_leftLine_coeffs[1] + last_leftLine_coeffs[2]* 2 * leftLine[i].y) < 0.2)
         {
-             
-            if (leftLine[i] != null && last_leftLine_coeffs[1] + last_leftLine_coeffs[2]* 2 * leftLine[i].y < 0.15)
-            {
-                turn = false;
-                return 1;
-            }
+            return 1;
         }
         
     }
-    
-    if (turn) return 0;
-    return -1;
+
+    return 0;
 }
 
 void DetectLane::update_desireLine(const vector<vector<Point> > &points)
@@ -749,10 +741,12 @@ void DetectLane::detectLeftRight(const vector<vector<Point> > &points)
     
     leftLane.clear();
     rightLane.clear();
+    midLane.clear();
     for (int i = 0; i < BIRDVIEW_HEIGHT / slideThickness; i ++)
     {
         leftLane.push_back(null);
         rightLane.push_back(null);
+        midLane.push_back(null);
     }
 
     int pointMap[points.size()][20];
@@ -873,6 +867,45 @@ void DetectLane::detectLeftRight(const vector<vector<Point> > &points)
             rightLane[floor(lane1[i].y / slideThickness)] = lane1[i];
         }
     }
+
+    vector<double> leftLane_x, leftLane_y, rightLane_x, rightLane_y, midLane_x, midLane_y;
+    for (int i=0; i< NUMBER_ELEMENTS; i++)
+    {
+        if (leftLane[i]!=null)
+        {
+            leftLane_x.push_back(leftLane[i].x);
+            leftLane_y.push_back(leftLane[i].y);
+        }
+
+        if (rightLane[i]!=null)
+        {
+            rightLane_x.push_back(rightLane[i].x);
+            rightLane_y.push_back(rightLane[i].y);
+        }
+
+        if (leftLane[i]!= null && rightLine[i] != null)
+        {
+            midLane_x.push_back((rightLine[i].x + leftLine[i].x)/2);
+            midLane_y.push_back((rightLine[i].y + leftLine[i].y)/2);
+        }
+    }
+    //regression
+    //x = a + b*y +c*y^2
+    PolynomialRegression<double> regress;
+    left_coeffs.clear();
+    right_coeffs.clear();
+    if (leftLane_x.size() && leftLane_y.size())
+    {
+        regress.fitIt(leftLane_y, leftLane_x, NUMBER_COEFFS-1, left_coeffs); 
+    }
+    if (rightLane_x.size() && rightLane_y.size())
+    {
+        regress.fitIt(rightLane_y, rightLane_x, NUMBER_COEFFS-1, right_coeffs);
+    }
+    if (midLane_x.size() && midLane_y.size())
+    {
+        regress.fitIt(midLane_y, midLane_x, NUMBER_COEFFS-1, mid_coeffs);
+    }
 }
 
 
@@ -927,3 +960,33 @@ Mat DetectLane::birdViewTranform(const Mat &src)
     return dst;
 }
 
+int DetectLane::turnLeftLane()
+{
+    double max = 0;
+    for (int i = 0; i <NUMBER_ELEMENTS; i++)
+    {  
+        if (leftLane[i] != null)
+        {
+            double temp = fabs(left_coeffs[1] + left_coeffs[2]* 2 * leftLane[i].y);
+            if (temp > max)
+                max = temp;            
+        }  
+    }
+    cout << max << endl;
+    if (max > 0.4) return 1;
+    else  return 0;
+}
+
+int DetectLane::turnLeftLane2()
+{
+    for (int i = 0; i < NUMBER_ELEMENTS-13; i++)
+    {      
+        if (leftLane[i] != null && fabs(left_coeffs[1] + left_coeffs[2]* 2 * leftLane[i].y) < 0.2)
+        {
+            return 1;
+        }
+        
+    }
+
+    return 0;
+}

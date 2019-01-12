@@ -27,10 +27,12 @@ public:
     
     vector<Point> getLeftLane();
     vector<Point> getRightLane();
+    vector<Point> getMidLane();
     vector<Point> getDesireLine();
     
     vector<Point> getLeftLine();
     vector<Point> getRightLine();
+    vector<Point> getMidLine();
 
     static int slideThickness;
 
@@ -51,7 +53,12 @@ public:
     
     int turnRight();
     int turnLeft();
-
+    int turnRight2();
+    int turnLeft2();
+    int turnRightLane();
+    int turnLeftLane();
+    int turnRightLane2();
+    int turnLeftLane2();
 private:
     Mat preProcess(const Mat &src);
 
@@ -92,9 +99,10 @@ private:
     int skyLine = 85;
     int shadowParam = 40;
 
-    vector<Point> leftLane, rightLane, desireLine, leftLine, rightLine, midLine;
+    vector<Point> leftLane, rightLane, desireLine, leftLine, rightLine, midLine, midLane;
     vector<vector<Point> > last5desireLine, last5left, last5right;
-    vector<double> last_leftLine_coeffs, last_rightLine_coeffs;
+    vector<double> last_leftLine_coeffs, last_rightLine_coeffs, last_midLine_coeffs;
+    vector<double> left_coeffs, right_coeffs, mid_coeffs;
 };
 
 

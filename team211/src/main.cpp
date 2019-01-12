@@ -30,13 +30,14 @@ CascadeClassifier sign_right;
 CascadeClassifier rock;
 CascadeClassifier stack_box;
 CascadeClassifier single_box;
-
 int idx = 1;
 
 int sign_flag = 0;
 bool turn_flag = false;
 
-int speed = 60;
+int speed = 50;
+
+bool isObstruction = false, leftObstruction = false, rightObstruction = false;
 
 int turn_times_right = 10;
 int turn_times_left = 10;
@@ -56,17 +57,39 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 
         if (car->isTurnRight == false && car->isTurnLeft == false)
         {
-            if (!car->isObtruction)
+            if (isObstruction == false)
             {
                 if (!detectSign(cv_ptr->image, sign_right, "right") && !detectSign(cv_ptr->image, sign_left, "left"))
-                    car->driverCar(detect->getLeftLine(), detect->getRightLine(), speed);
+                    car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed, 40);
                 else if (detectSign(cv_ptr->image, sign_right, "right"))
                 {
-                    car->isTurnRight = true; 
+                    car->isTurnRight = 1;
+                    car->turnRightFlag = false;
+                    
                 }
-                else 
+                else if (detectSign(cv_ptr->image, sign_left, "left")) 
                 {
-                    car->isTurnLeft = true;
+                    car->isTurnLeft = 1;
+                    car->turnLeftFlag = false;
+                }
+                else
+                {
+                    cout << "error\n";
+                }
+
+                //Check obstruction
+                vector<Point> s1 = detectRock(cv_ptr->image, rock);
+                vector<Point> s2 = detectStackBox(cv_ptr->image, stack_box);
+                vector<Point> s3 = detectSingleBox(cv_ptr->image, single_box);
+
+                if (!s1.empty())
+                {
+                    isObstruction = true;
+                    if (s1[0].x + s1[1].x > 320)
+                        rightObstruction = true;
+                    else
+                        rightObstruction = true;
+
                 }
             }
 
@@ -75,34 +98,75 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
                 
             }
         }
-        
-        if (car->isTurnRight)
+        else if (car->isTurnRight)
         {
             //Using a function to controll drive_right() to pass the turn
-            cout <<  "Right sign size: " << detectSign(cv_ptr->image, sign_right, "right") << endl;
             
-            if (detect->turnRight() == 0 || detectSign(cv_ptr->image, sign_right, "right") > 35)
-                car->drive_right();
-            if (detect->turnRight() == 1)
+            if (!car->turnRightFlag)
             {
-                car->driverCar(detect->getLeftLine(), detect->getRightLine(), speed);
-                car->isTurnRight = false;
+                //cout <<  "Right sign size: " << detectSign(cv_ptr->image, sign_right, "right") << endl;
+                if  (detect->turnRight())//(detectSign(cv_ptr->image, sign_right, "right") > 50) 
+                {
+                    car->turnRightFlag = true;
+                    car->drive_right();
+                   
+                }
+                else
+                {
+                    cout << "a\n";
+                    car->driverCar(detect->getMidLine(), detect->getRightLine(), speed-10, 20);
+                }
+            }
+            else 
+            {
+               if (detect->turnRight2() == 1)
+                {
+                    car->driverCar(detect->getLeftLine(), detect->getRightLine(), speed, 40);
+                    car->isTurnRight = false;
+                    car->turnRightFlag = false;
+                }
+                else
+                    car->drive_right();
             }
         }
         
-        if (car->isTurnLeft)
+        else if (car->isTurnLeft)
         {
             //Using a function to controll drive_right() to pass the turn
-            cout <<  "Left sign size: " << detectSign(cv_ptr->image, sign_left, "left") << endl;
+            //cout <<  "Left sign size: " << detectSign(cv_ptr->image, sign_left, "left") << endl;
             
-            if (detect->turnLeft() == 0 || detectSign(cv_ptr->image, sign_left, "left") > 35)
-                car->drive_left();
-            if (detect->turnLeft() == 1)
+            if (!car->turnLeftFlag)
             {
-                car->driverCar(detect->getLeftLine(), detect->getRightLine(), speed);
-                car->isTurnLeft = false;
+                if (detect->turnLeftLane())
+                {
+                    car->drive_left();
+                    car->turnLeftFlag = true;
+                }
+                else car->driverCar(detect->getLeftLane(), detect->getMidLane(), speed-10, 20);
+
             }
+
+            else
+            {
+                if (detect->turnLeftLane2() == 1)
+                {
+                    car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed, 40);
+                    car->isTurnLeft = false;
+                    car->turnLeftFlag = false;
+                }
+                else car->drive_left();
+            }
+            
         }
+
+        else
+        {
+            cout << "Error2\n";
+
+        }
+        
+        
+        
 
 
         // if (sign_flag == 0)
@@ -210,22 +274,22 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         if ( !points.empty())
         {
             // do stuff with stackbox detected
-            cout<< "Signle Box(" << points[0].x << ","<< points[0].y <<")("<< points[1].x<<","<<points[1].y<<")"<< endl;
+            cout<< "Single Box(" << points[0].x << ","<< points[0].y <<")("<< points[1].x<<","<<points[1].y<<")"<< endl;
 
             // after that empty the vector for next function
             points.clear();
         };
 
-
         cv::imshow("View", cv_ptr->image);
-        //waitKey(1);
-        //Write image for training
-        // string name = to_string(idx);
-        // string savepath = "/home/fallinlove/catkin_ws/image/111e" + name + ".jpg";
-        // imwrite(savepath, cv_ptr->image);
-        // idx++;
         waitKey(1);
-        
+        //Write image for training
+        /*
+        string name = to_string(idx);
+        string savepath = "/home/fallinlove/catkin_ws/image/101c" + name + ".jpg";
+        imwrite(savepath, cv_ptr->image);
+        idx++;
+        waitKey(1);
+        */
 
     }
     catch (cv_bridge::Exception& e)
@@ -275,12 +339,11 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (!single_box.load(single_box_name))
+    if (!single_box.load(single_box_name))
 	{
 		printf("--(!) Error loading stackbox detect \n");
 		return 0;
 	}
-
 ros::init(argc, argv, "image_listener");
     cv::namedWindow("View");
     cv::namedWindow("Binary");

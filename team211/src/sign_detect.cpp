@@ -32,7 +32,6 @@ vector<Point> detectStackBox(Mat frame, CascadeClassifier stack_box, String name
 	return detectOject(frame, stack_box, name, 1.1);
 }
 
-
 /* Detect single box */
 vector<Point> detectSingleBox(Mat frame, CascadeClassifier stack_box, String name)
 {

@@ -36,7 +36,7 @@ float CarControl::errorAngle(const Point &dst)
     return atan(dx / dy) * 180 / pi;
 }
 
-void CarControl::driverCar(const vector<Point> &left, const vector<Point> &right, float velocity)
+void CarControl::driverCar(const vector<Point> &left, const vector<Point> &right, float velocity, float roadWidth)
 {
     int i = left.size() - 12;
     float error = preError;
@@ -50,11 +50,11 @@ void CarControl::driverCar(const vector<Point> &left, const vector<Point> &right
     } 
     else if (left[i] != DetectLane::null)
     {
-        error = errorAngle(left[i] + Point(laneWidth / 2, 0));
+        error = errorAngle(left[i] + Point(roadWidth / 2, 0));
     }
     else
     {
-        error = errorAngle(right[i] - Point(laneWidth / 2, 0));
+        error = errorAngle(right[i] - Point(roadWidth / 2, 0));
     }
 
     std_msgs::Float32 angle;
@@ -118,7 +118,8 @@ void CarControl::drive_right()
 	angle.data = 50;
 	speed.data = 45;
 	steer_publisher.publish(angle);
-	speed_publisher.publish(speed);    
+	speed_publisher.publish(speed);
+    cout <<"turn righttt\n"; 
 }
 
 void CarControl::drive_left()

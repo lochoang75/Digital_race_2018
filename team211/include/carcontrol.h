@@ -21,16 +21,20 @@ public:
     
     CarControl();
     ~CarControl();
-    void driverCar(const vector<Point> &left, const vector<Point> &right, float velocity);
+    void driverCar(const vector<Point> &left, const vector<Point> &right, float velocity, float roadWidth);
     void drive_right();
     void drive_Right(const vector<Point> &right, float velocity);
     void drive_left();
     void drive_Left(const vector<Point> &left, float velocity);
 
-    bool isTurnRight = 0;
-    bool isTurnLeft = 0;
+    bool isTurnRight = false, turnRightFlag = false;
+    
+    bool isTurnLeft = false, turnLeftFlag = false; 
+
 
     bool isObtruction = 0;
+    bool driveLeftLane = 0;
+    bool driveRightLane = 0;
     //void set_Velocity(const std_msgs::Float32::ConstPtr& msg) {velocity = msg->data ;}
 
     //float get_Velocity();
