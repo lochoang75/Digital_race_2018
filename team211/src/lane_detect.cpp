@@ -162,7 +162,7 @@ void DetectLane::update(const Mat &src)
         }
     }
     ////imshow("Lane Detect1", birdView); 
-    imshow("Lane Detect", lane);
+   //imshow("Lane Detect", lane);
 
     
     
@@ -402,12 +402,12 @@ bool DetectLane::fillRoadSide(const vector<Mat> &src)
             {
                 regress.fitIt(rightLine_y, rightLine_x, NUMBER_COEFFS-1, last_rightLine_coeffs);
             }
-            for (int i = 0; i < last_leftLine_coeffs.size(); i++)
-                cout << last_leftLine_coeffs[i] << " ";
-            cout << endl;
-            for (int i = 0; i < last_rightLine_coeffs.size(); i++)
-                cout << last_rightLine_coeffs[i] << " ";
-            cout << endl;
+            // for (int i = 0; i < last_leftLine_coeffs.size(); i++)
+            //     cout << last_leftLine_coeffs[i] << " ";
+            // cout << endl;
+            // for (int i = 0; i < last_rightLine_coeffs.size(); i++)
+            //     cout << last_rightLine_coeffs[i] << " ";
+            // cout << endl;
             return false;
         }
         
@@ -657,7 +657,7 @@ int DetectLane::turnRight()
                 max = temp;            
         }  
     }
-    cout << max << endl;
+    // cout << max << endl;
     if (max > 0.4) return 1;
     else  return 0;
 }
@@ -670,8 +670,8 @@ int DetectLane::turnRight2()
             
         if (rightLine[i] != null && fabs(last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y) < 0.2)
         {
-            cout << last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y << endl;
-            cout << i << endl;
+            // cout << last_rightLine_coeffs[1] + last_rightLine_coeffs[2]* 2 * rightLine[i].y << endl;
+            // cout << i << endl;
             return 1;
         }
 
@@ -695,7 +695,7 @@ int DetectLane::turnLeft()
                 max = temp;            
         }  
     }
-    cout << max << endl;
+    // cout << max << endl;
     if (max > 0.4) return 1;
     else  return 0;
 }
@@ -980,7 +980,7 @@ int DetectLane::turnLeftLane()
                 max = temp;            
         }  
     }
-    cout << max << endl;
+    // cout << max << endl;
     if (max > 0.4) return 1;
     else  return 0;
 }
@@ -1013,7 +1013,7 @@ int DetectLane::turnRightLane()
                 max = temp;            
         }  
     }
-    cout << max << endl;
+    // cout << max << endl;
     if (max > 0.4) return 1;
     else  return 0;
 }

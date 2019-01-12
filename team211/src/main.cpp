@@ -305,9 +305,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         //          car->driverCar(detect->getLeftLane(), detect->getRightLane(), speed);
         //     }
         // }
-        Mat image = cv_ptr->image.clone();
+        //Mat image = cv_ptr->image.clone();
         //line(image, paint1, paint2, Scalar(255, 0, 0), 3, CV_AA);
-        cv::imshow("View", image);
+        cv::imshow("View", cv_ptr->image);
         waitKey(1);
         //Write image for training
         /*
@@ -376,7 +376,7 @@ ros::init(argc, argv, "image_listener");
     // cv::namedWindow("Binary");
     // //cv::namedWindow("Threshold");
     // cv::namedWindow("Bird View");
-    cv::namedWindow("Lane Detect");
+    //cv::namedWindow("Lane Detect");
     // //cv::namedWindow("Lane Detect1");
     // //cv::namedWindow("Shadow");
     // cv::namedWindow("Merge");
